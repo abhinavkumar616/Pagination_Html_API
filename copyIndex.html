@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Pagination with API</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .pagination {
+            display: flex;
+            list-style: none;
+            margin: 20px 0;
+            padding: 0;
+            justify-content: center;
+        }
+
+        .pagination li {
+            margin: 0 5px;
+            padding: 5px 10px;
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .pagination li.active {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .pagination li:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div id="content">
+        <!-- Content to be paginated -->
+    </div>
+    <ul class="pagination"></ul>
+
+    <script>
+
+        const itemsPerPage = 10; // Number of items per page
+        let currentPage = 1;
+        let data = []; // To store API data
+
+        // Function to make an API request and fetch data
+        async function fetchData() {
+            const apiUrl = 'http://35.231.83.234:3040/getProduct';
+            try {
+                const response = await fetch(apiUrl);
+                const result = await response.json();
+                data = result.data;
+                displayItems();
+                createPaginationButtons();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Function to display items for the current page
+        function displayItems() {
+            const content = document.getElementById('content');
+            content.innerHTML = '';
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            for (let i = startIndex; i < endIndex && i < data.length; i++) {
+                const item = data[i];
+                const itemElement = document.createElement('div');
+                itemElement.textContent = item.orderno;
+                content.appendChild(itemElement);
+            }
+        }
+
+        // Function to create pagination buttons
+        function createPaginationButtons() {
+            const pagination = document.querySelector('.pagination');
+            pagination.innerHTML = '';
+
+            const totalPages = Math.ceil(data.length / itemsPerPage);
+            const maxPagesToShow = 5; // Number of pages to show at a time
+            const halfMaxPagesToShow = Math.floor(maxPagesToShow / 2);
+
+            let startPage = currentPage - halfMaxPagesToShow;
+            startPage = Math.max(1, startPage);
+            const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+            // Add previous button
+            const prevButton = document.createElement('li');
+            prevButton.textContent = 'Previous';
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayItems();
+                    createPaginationButtons();
+                }
+            });
+            pagination.appendChild(prevButton);
+
+            // Create page buttons
+            for (let page = startPage; page <= endPage; page++) {
+                const li = document.createElement('li');
+                li.textContent = page;
+                li.addEventListener('click', () => {
+                    currentPage = page;
+                    displayItems();
+                    createPaginationButtons();
+                });
+
+                if (page === currentPage) {
+                    li.classList.add('active');
+                }
+
+                pagination.appendChild(li);
+            }
+
+            // Add next button
+            const nextButton = document.createElement('li');
+            nextButton.textContent = 'Next';
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayItems();
+                    createPaginationButtons();
+                }
+            });
+            pagination.appendChild(nextButton);
+        }
+
+        fetchData();
+
+
+    </script>
+</body>
+
+</html>

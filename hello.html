@@ -1,0 +1,72 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagination Demo</title>
+  <style>
+    .pagination-btn {
+      margin: 0 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Items</h1>
+  <ul id="items-list"></ul>
+  <div id="pagination"></div>
+
+  <script>
+    async function fetchData(page = 1) {
+      const response = await fetch(`http://localhost:3000/getPagination?page=${page}`);
+      const data = await response.json();
+      return data;
+    }
+
+    async function displayItems(page) {
+      const itemsList = document.getElementById('items-list');
+      const pagination = document.getElementById('pagination');
+
+      // Fetch both items and total pages
+      const { items, totalPages } = await fetchData(page);
+
+      itemsList.innerHTML = items.map(item => `<li>${item.name}</li>`).join('');
+
+      // Implement pagination UI with a dynamic page number range
+      const visiblePages = 5; // Adjust the number of visible pages as needed
+      const halfVisiblePages = Math.floor(visiblePages / 2);
+
+      let startPage = Math.max(1, page - halfVisiblePages);
+      let endPage = Math.min(totalPages, startPage + visiblePages - 1);
+
+      if (totalPages <= visiblePages) {
+        startPage = 1;
+        endPage = totalPages;
+      } else if (endPage === totalPages) {
+        startPage = Math.max(1, endPage - visiblePages + 1);
+      }
+
+      let paginationHTML = '';
+
+      if (page > 1) {
+        paginationHTML += `<button class="pagination-btn" onclick="displayItems(${page - 1})">Previous</button>`;
+      }
+
+      paginationHTML += '<div>';
+      for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `<button class="pagination-btn" onclick="displayItems(${i})"${i === page ? ' class="active"' : ''}>${i}</button>`;
+      }
+      paginationHTML += '</div>';
+
+      if (page < totalPages) {
+        paginationHTML += `<button class="pagination-btn" onclick="displayItems(${page + 1})">Next</button>`;
+      }
+
+      pagination.innerHTML = paginationHTML;
+    }
+
+    displayItems(1);
+  </script>
+</body>
+</html>
